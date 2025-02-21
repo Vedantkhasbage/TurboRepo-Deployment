@@ -1,0 +1,23 @@
+name: Deploy to staging
+on: 
+   push:
+      branches:
+        - "main"
+          
+jobs:
+  redeploy_everything:
+    name: Deploying everything to the staging cluster
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH into server
+      - run: |
+          echo ${{ secrets.SSH_PRIVATE_KEY }} &> ~/ssh_key
+          ssh -i ~/ssh_key ubuntu@3.111.29.7
+          cd TurboRepo-Deployment/ && git pull
+          pnpm install
+          pnpm run build
+          pm2 restart http-server
+          pm2 restart ws-server
+          pm2 restart fe-server
+
