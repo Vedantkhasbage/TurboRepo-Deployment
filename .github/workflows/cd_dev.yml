@@ -9,7 +9,8 @@ jobs:
      name: Deploying everything to the staging cluster
      steps:
       - run: |
-          echo ${{ secrets.SSH_PRIVATE_KEY }} &> ~/ssh_key
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" &> ~/ssh_key
+          echo "${{ secrets.KNOWN_HOSTS }}" &> ~/.ssh/known_hosts
           ssh -i ~/ssh_key ubuntu@3.111.29.7
           cd TurboRepo-Deployment/ && git pull
           pnpm install
