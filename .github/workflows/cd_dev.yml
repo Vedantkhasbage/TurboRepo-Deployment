@@ -1,4 +1,5 @@
 name: Deploy to staging
+
 on:
   push:
     branches: [ main ]
@@ -8,12 +9,20 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploying everything to the staging cluster
     steps:
-      - run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" &> ~/ssh_key
-          mkdir -p /home/runner/.ssh
-          ls /home/runner/.ssh
-          touch /home/runner/.ssh/known_hosts
-          echo "${{ secrets.KNOWN_HOSTS }}" &> /home/runner/.ssh/known_hosts
-          chmod 600 /home/runner/ssh_key
-          ssh -i ~/ssh_key ubuntu@3.111.29.7 -t "cd TurboRepo-Deployment/ && git pull origin main && 
-          export PATH=/home/ubuntu/.nvm/versions/node/v22.14.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin && npm install -g pnpm && pnpm install && pnpm run build && pm2 restart fe-server && pm2 restart http-server && pm2 restart ws-server"
+      - name: Setup SSH Key and Known Hosts
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/ssh_key
+          chmod 600 ~/ssh_key
+
+          mkdir -p ~/.ssh
+          touch ~/.ssh/known_hosts
+          echo "${{ secrets.KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Deploy to Staging Server
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/ssh_key ubuntu@3.111.29.7 "
+            cd TurboRepo-Deployment/ && git pull origin main &&
+            export PATH=/home/ubuntu/.nvm/versions/node/v22.14.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin &&
+            npm install -g pnpm && pnpm install && pnpm run build &&
+            pm2 restart fe-server && pm2 restart http-server && pm2 restart ws-server
+          "
